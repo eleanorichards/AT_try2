@@ -1,0 +1,3 @@
+﻿  main.cpp
+c:\users\elean\source\repos\at_try2\at_try2\main.cpp(230): warning C4838: conversion from 'int' to 'BYTE' requires a narrowing conversion
+  AT_try2.vcxproj -> C:\Users\Elean\source\repos\AT_try2\Debug\AT_try2.exe
