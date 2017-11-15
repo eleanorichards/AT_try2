@@ -1,10 +1,9 @@
-
-
+//STARTING POINT OF THE APPLICATION
 #include "math.h"
 #include <windows.h>                              // Header File For Windows
 #include <GL\glew.h>
 #include <gl\gl.h>                                // Header File For The OpenGL32 Library
-//#include <gl\glu.h>                               // Header File For The GLu32 Library
+#include "ShapeMaker.h"
 
 HGLRC           hRC = NULL;                           // Permanent Rendering Context
 HDC             hDC = NULL;                           // Private GDI Device Context
@@ -14,6 +13,10 @@ HINSTANCE       hInstance;                          // Holds The Instance Of The
 bool    keys[256];                              // Array Used For The Keyboard Routine
 bool    active = TRUE;                                // Window Active Flag Set To TRUE By Default
 bool    fullscreen = TRUE;                            // Fullscreen Flag Set To Fullscreen Mode By Default
+
+GLvoid KillGLWindow(GLvoid);
+int DrawGLScene(GLvoid);
+int InitGL(GLvoid);
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);               // Declaration For WndProc
 
@@ -41,85 +44,9 @@ GLvoid ReSizeGLScene(GLsizei width, GLsizei height)             // Resize And In
 
 	//to replace gluPerspective
 	perspectiveGL(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
-												// Calculate The Aspect Ratio Of The Window
-	//gluPerspective(45.0f, (GLfloat)width / (GLfloat)height, 0.1f, 100.0f);
 
 	glMatrixMode(GL_MODELVIEW);                     // Select The Modelview Matrix
 	glLoadIdentity();                           // Reset The Modelview Matrix
-}
-
-
-int InitGL(GLvoid)                              // All Setup For OpenGL Goes Here
-{
-	glShadeModel(GL_SMOOTH);
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glClearDepth(1.0f);                         // Depth Buffer Setup
-	glEnable(GL_DEPTH_TEST);                        // Enables Depth Testing
-	glDepthFunc(GL_LEQUAL);                         // The Type Of Depth Test To Do
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);          // Really Nice Perspective Calculations
-	return TRUE;                                // Initialization Went OK
-}
-
-int DrawGLScene(GLvoid)                             // Here's Where We Do All The Drawing
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);         // Clear The Screen And The Depth Buffer
-	glLoadIdentity();                           // Reset The Current Modelview Matrix
-	glTranslatef(-1.5f, 0.0f, -6.0f);
-	glBegin(GL_TRIANGLES);                      //Draw a triangle
-		glColor3f(1.0f, 1.0f, 0.0f);
-		glVertex3f(0.0f, 1.0f, 0.0f);					// Top
-		glColor3f(0.0f, 1.0f, 0.0f);
-		glVertex3f(-1.0f, -1.0f, 0.0f);					// Bottom Left
-		glVertex3f(1.0f, -1.0f, 0.0f);					// Bottom Right
-	glEnd();
-	glTranslatef(1.5f, 0.0f, -6.0f);
-	glBegin(GL_QUADS);  
-	glColor3f(0.0f, 0.0f, 1.0f);
-	// Draw A Quad
-		glVertex3f(-1.0f, 1.0f, 0.0f);              // Top Left
-		glVertex3f(1.0f, 1.0f, 0.0f);              // Top Right
-		glVertex3f(1.0f, -1.0f, 0.0f);              // Bottom Right
-		glVertex3f(-1.0f, -1.0f, 0.0f);              // Bottom Left
-	glEnd();
-	glTranslatef(3.0f, 0.0f, 0.0f);                   // Move Right 3 Units
-
-	return TRUE;                                // Everything Went OK
-}
-
-GLvoid KillGLWindow(GLvoid)                         // Properly Kill The Window
-{
-	if (fullscreen)                             // Are We In Fullscreen Mode?
-	{
-		ChangeDisplaySettings(NULL, 0);                  // If So Switch Back To The Desktop
-		ShowCursor(TRUE);                       // Show Mouse Pointer
-	}
-	if (hRC)                                // Do We Have A Rendering Context?
-	{
-		if (!wglMakeCurrent(NULL, NULL))                 // Are We Able To Release The DC And RC Contexts?
-		{
-			MessageBox(NULL, "Release Of DC And RC Failed.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
-		}
-		if (!wglDeleteContext(hRC))                 // Are We Able To Delete The RC?
-		{
-			MessageBox(NULL, "Release Rendering Context Failed.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
-		}
-		hRC = NULL;                           // Set RC To NULL
-	}
-	if (hDC && !ReleaseDC(hWnd, hDC))                    // Are We Able To Release The DC
-	{
-		MessageBox(NULL, "Release Device Context Failed.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
-		hDC = NULL;                           // Set DC To NULL
-	}
-	if (hWnd && !DestroyWindow(hWnd))                   // Are We Able To Destroy The Window?
-	{
-		MessageBox(NULL, "Could Not Release hWnd.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
-		hWnd = NULL;                          // Set hWnd To NULL
-	}
-	if (!UnregisterClass("OpenGL", hInstance))               // Are We Able To Unregister Class
-	{
-		MessageBox(NULL, "Could Not Unregister Class.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
-		hInstance = NULL;                         // Set hInstance To NULL
-	}
 }
 
 BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscreenflag)
@@ -272,10 +199,138 @@ BOOL CreateGLWindow(char* title, int width, int height, int bits, bool fullscree
 	return TRUE;                                // Success
 }
 
-LRESULT CALLBACK WndProc(HWND    hWnd,                   // Handle For This Window
-	UINT    uMsg,                   // Message For This Window
-	WPARAM  wParam,                 // Additional Message Information
-	LPARAM  lParam)                 // Additional Message Information
+
+int InitGL(GLvoid)                              // All Setup For OpenGL Goes Here
+{
+	glShadeModel(GL_SMOOTH);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearDepth(1.0f);                         // Depth Buffer Setup
+	glEnable(GL_DEPTH_TEST);                        // Enables Depth Testing
+	glDepthFunc(GL_LEQUAL);                         // The Type Of Depth Test To Do
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);          // Really Nice Perspective Calculations
+	return TRUE;                                // Initialization Went OK
+}
+
+int WINAPI WinMain(HINSTANCE   hInstance,	HINSTANCE   hPrevInstance,	LPSTR       lpCmdLine, int     nCmdShow) 
+{
+	MSG msg;                                // Windows Message Structure
+	BOOL    done = FALSE;                         // Bool Variable To Exit Loop
+												  // Create Our OpenGL Window
+	if (!CreateGLWindow("Ellie's OpenGL Framework", 640, 480, 16, !fullscreen))
+	{
+		return 0;                           // Quit If Window Was Not Created
+	}
+	while (!done)                                // Loop That Runs Until done=TRUE
+	{
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))           // Is There A Message Waiting?
+		{
+			if (msg.message == WM_QUIT)               // Have We Received A Quit Message?
+			{
+				done = TRUE;                  // If So done=TRUE
+			}
+			else                            // If Not, Deal With Window Messages
+			{
+				TranslateMessage(&msg);             // Translate The Message
+				DispatchMessage(&msg);              // Dispatch The Message
+			}
+			return true;
+		}
+		else
+		{
+			// Draw The Scene.  Watch For ESC Key And Quit Messages From DrawGLScene()
+			if (active)                     // Program Active?
+			{
+				if (keys[VK_ESCAPE])                // Was ESC Pressed?
+				{
+					done = TRUE;              // ESC Signalled A Quit
+				}
+				else                        // Not Time To Quit, Update Screen
+				{
+					DrawGLScene();              // Draw The Scene
+					SwapBuffers(hDC);           // Swap Buffers (Double Buffering)
+				}
+			}
+			if (keys[VK_F1])                    // Is F1 Being Pressed?
+			{
+				keys[VK_F1] = FALSE;              // If So Make Key FALSE
+				KillGLWindow();                 // Kill Our Current Window
+				fullscreen = !fullscreen;             // Toggle Fullscreen / Windowed Mode
+													  // Recreate Our OpenGL Window
+				if (!CreateGLWindow("NeHe's OpenGL Framework", 640, 480, 16, !fullscreen))
+				{
+					return 0;               // Quit If Window Was Not Created
+				}
+			}
+		}
+	}
+	// Shutdown
+	KillGLWindow();                             // Kill The Window
+	return (msg.wParam);                            // Exit The Program
+}
+
+int DrawGLScene(GLvoid)                             // Here's Where We Do All The Drawing
+{
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);         // Clear The Screen And The Depth Buffer
+	glLoadIdentity();                           // Reset The Current Modelview Matrix
+	//gluLookAt();
+	glTranslatef(-1.5f, 0.0f, -6.0f);
+	glBegin(GL_TRIANGLES);                      //Draw a triangle
+		glColor3f(1.0f, 1.0f, 0.0f);
+		glVertex3f(0.0f, 1.0f, 0.0f);					// Top
+		glColor3f(0.0f, 1.0f, 0.0f);
+		glVertex3f(-1.0f, -1.0f, 0.0f);					// Bottom Left
+		glVertex3f(1.0f, -1.0f, 0.0f);					// Bottom Right
+	glEnd();
+	glTranslatef(1.5f, 0.0f, -6.0f);
+	glBegin(GL_QUADS);  
+	glColor3f(0.0f, 0.0f, 1.0f);
+	// Draw A Quad
+		glVertex3f(-1.0f, 1.0f, 0.0f);              // Top Left
+		glVertex3f(1.0f, 1.0f, 0.0f);              // Top Right
+		glVertex3f(1.0f, -1.0f, 0.0f);              // Bottom Right
+		glVertex3f(-1.0f, -1.0f, 0.0f);              // Bottom Left
+	glEnd();
+
+	return TRUE;                                // Everything Went OK
+}
+
+GLvoid KillGLWindow(GLvoid)                         // Properly Kill The Window
+{
+	if (fullscreen)                             // Are We In Fullscreen Mode?
+	{
+		ChangeDisplaySettings(NULL, 0);                  // If So Switch Back To The Desktop
+		ShowCursor(TRUE);                       // Show Mouse Pointer
+	}
+	if (hRC)                                // Do We Have A Rendering Context?
+	{
+		if (!wglMakeCurrent(NULL, NULL))                 // Are We Able To Release The DC And RC Contexts?
+		{
+			MessageBox(NULL, "Release Of DC And RC Failed.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
+		}
+		if (!wglDeleteContext(hRC))                 // Are We Able To Delete The RC?
+		{
+			MessageBox(NULL, "Release Rendering Context Failed.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
+		}
+		hRC = NULL;                           // Set RC To NULL
+	}
+	if (hDC && !ReleaseDC(hWnd, hDC))                    // Are We Able To Release The DC
+	{
+		MessageBox(NULL, "Release Device Context Failed.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
+		hDC = NULL;                           // Set DC To NULL
+	}
+	if (hWnd && !DestroyWindow(hWnd))                   // Are We Able To Destroy The Window?
+	{
+		MessageBox(NULL, "Could Not Release hWnd.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
+		hWnd = NULL;                          // Set hWnd To NULL
+	}
+	if (!UnregisterClass("OpenGL", hInstance))               // Are We Able To Unregister Class
+	{
+		MessageBox(NULL, "Could Not Unregister Class.", "SHUTDOWN ERROR", MB_OK | MB_ICONINFORMATION);
+		hInstance = NULL;                         // Set hInstance To NULL
+	}
+}
+
+LRESULT CALLBACK WndProc(HWND    hWnd, UINT  uMsg, WPARAM  wParam,	LPARAM  lParam)                
 {
 	switch (uMsg)                               // Check For Windows Messages
 	{
@@ -327,61 +382,23 @@ LRESULT CALLBACK WndProc(HWND    hWnd,                   // Handle For This Wind
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-int WINAPI WinMain(HINSTANCE   hInstance,              // Instance
-	HINSTANCE   hPrevInstance,              // Previous Instance
-	LPSTR       lpCmdLine,              // Command Line Parameters
-	int     nCmdShow)               // Window Show State
-{
-	MSG msg;                                // Windows Message Structure
-	BOOL    done = FALSE;                         // Bool Variable To Exit Loop
-												  // Create Our OpenGL Window
-	if (!CreateGLWindow("NeHe's OpenGL Framework", 640, 480, 16, !fullscreen))
-	{
-		return 0;                           // Quit If Window Was Not Created
-	}
-	while (!done)                                // Loop That Runs Until done=TRUE
-	{
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))           // Is There A Message Waiting?
-		{
-			if (msg.message == WM_QUIT)               // Have We Received A Quit Message?
-			{
-				done = TRUE;                  // If So done=TRUE
-			}
-			else                            // If Not, Deal With Window Messages
-			{
-				TranslateMessage(&msg);             // Translate The Message
-				DispatchMessage(&msg);              // Dispatch The Message
-			}
-		}
-		else                                // If There Are No Messages
-		{
-			// Draw The Scene.  Watch For ESC Key And Quit Messages From DrawGLScene()
-			if (active)                     // Program Active?
-			{
-				if (keys[VK_ESCAPE])                // Was ESC Pressed?
-				{
-					done = TRUE;              // ESC Signalled A Quit
-				}
-				else                        // Not Time To Quit, Update Screen
-				{
-					DrawGLScene();              // Draw The Scene
-					SwapBuffers(hDC);           // Swap Buffers (Double Buffering)
-				}
-			}
-			if (keys[VK_F1])                    // Is F1 Being Pressed?
-			{
-				keys[VK_F1] = FALSE;              // If So Make Key FALSE
-				KillGLWindow();                 // Kill Our Current Window
-				fullscreen = !fullscreen;             // Toggle Fullscreen / Windowed Mode
-													  // Recreate Our OpenGL Window
-				if (!CreateGLWindow("NeHe's OpenGL Framework", 640, 480, 16, !fullscreen))
-				{
-					return 0;               // Quit If Window Was Not Created
-				}
-			}
-		}
-	}
-	// Shutdown
-	KillGLWindow();                             // Kill The Window
-	return (msg.wParam);                            // Exit The Program
-}
+//bool CheckMessages(MSG _msg, bool _done)
+//{
+//	if (PeekMessage(&_msg, NULL, 0, 0, PM_REMOVE))           // Is There A Message Waiting?
+//	{
+//		if (_msg.message == WM_QUIT)               // Have We Received A Quit Message?
+//		{
+//			_done = TRUE;                  // If So done=TRUE
+//		}
+//		else                            // If Not, Deal With Window Messages
+//		{
+//			TranslateMessage(&_msg);             // Translate The Message
+//			DispatchMessage(&_msg);              // Dispatch The Message
+//		}
+//		return true;
+//	}
+//	else
+//	{
+//		return false;
+//	}
+//}

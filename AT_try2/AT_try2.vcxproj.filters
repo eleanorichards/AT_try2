@@ -27,9 +27,15 @@
     <ClInclude Include="AT_try2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ShapeMaker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShapeMaker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
